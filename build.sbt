@@ -1,10 +1,3 @@
-val http4sModules = Seq(
-  "blaze-server",
-  "blaze-client",
-  "dsl",
-  "circe"
-)
-
 val app = project
   .in(file("."))
   .enablePlugins(RevolverPlugin)
@@ -13,7 +6,7 @@ val app = project
     version := "0.0.1",
     scalaVersion := "3.1.1",
     libraryDependencies ++=
-      http4sModules.map { m =>"org.http4s" %% s"http4s-$m" % "0.23.10" } ++
+      Seq("ember-server", "dsl", "circe").map { m => "org.http4s" %% s"http4s-$m" % "0.23.10" } ++
       Seq("core", "generic").map { m => "io.circe" %% s"circe-$m" % "0.14.1" } ++
       Seq("classic", "core").map { m => "ch.qos.logback" % s"logback-$m" % "1.2.10" } ++
       Seq(
