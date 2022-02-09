@@ -1,4 +1,4 @@
-import com.typesafe.sbt.packager.MappingsHelper.contentOf
+import com.typesafe.sbt.packager.MappingsHelper.{contentOf, directory}
 
 inThisBuild(
   Seq(
@@ -25,7 +25,9 @@ val server = project
       ),
     testFrameworks += new TestFramework("munit.Framework"),
     Universal / javaOptions ++= Seq("-J-Xmx256m"),
-    Universal / mappings ++= contentOf("src/universal")
+    Universal / mappings ++=
+      contentOf(baseDirectory.value / "src" / "universal") ++
+      directory(baseDirectory.value / "public")
   )
 
 val infra = project.in(file("infra")).settings(
