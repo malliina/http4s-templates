@@ -1,3 +1,5 @@
+import com.typesafe.sbt.packager.MappingsHelper.contentOf
+
 inThisBuild(
   Seq(
     organization := "com.malliina",
@@ -21,7 +23,9 @@ val server = project
         "org.typelevel" %% "munit-cats-effect-3" % "1.0.7" % Test,
         "com.malliina" %% "okclient-io" % "3.1.0" % Test
       ),
-    testFrameworks += new TestFramework("munit.Framework")
+    testFrameworks += new TestFramework("munit.Framework"),
+    Universal / javaOptions ++= Seq("-J-Xmx256m"),
+    Universal / mappings ++= contentOf("src/universal")
   )
 
 val infra = project.in(file("infra")).settings(
