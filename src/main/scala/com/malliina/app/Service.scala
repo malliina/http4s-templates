@@ -9,6 +9,7 @@ import com.malliina.app.Service.noCache
 import io.circe.syntax.EncoderOps
 import org.http4s.CacheDirective.{`must-revalidate`, `no-cache`, `no-store`}
 import org.http4s.Status.{InternalServerError, NotFound}
+import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.headers.`Cache-Control`
 import org.http4s.server.middleware.{GZip, HSTS}
 import org.http4s.server.{Router, Server}
@@ -22,7 +23,7 @@ object Service extends IOApp:
   val noCache = `Cache-Control`(`no-cache`(), `no-store`, `must-revalidate`)
 
   def emberServer[F[_]: Async] =
-    org.http4s.ember.server.EmberServerBuilder
+    EmberServerBuilder
       .default[F]
       .withHost(host"0.0.0.0")
       .withPort(port"9000")
