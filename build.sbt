@@ -7,7 +7,7 @@ inThisBuild(
 )
 
 val app = project
-  .in(file("."))
+  .in(file("server"))
   .enablePlugins(RevolverPlugin)
   .settings(
     libraryDependencies ++=
@@ -29,5 +29,7 @@ val infra = project.in(file("infra")).settings(
     "software.amazon.awscdk" % "aws-cdk-lib" % "2.12.0"
   )
 )
+
+val root = project.in(file(".")).aggregate(app, infra)
 
 Global / onChangedBuildSource := ReloadOnSourceChanges

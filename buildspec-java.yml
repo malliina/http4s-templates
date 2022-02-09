@@ -1,0 +1,21 @@
+version: 0.2
+env:
+  variables:
+    SBT_VERSION: "1.6.2"
+phases:
+  install:
+    runtime-versions:
+      java: corretto11
+    commands:
+      - echo `pwd`
+      - sbt sbtVersion
+  build:
+    commands:
+      - echo $CODEBUILD_WEBHOOK_HEAD_REF
+      - echo $CODEBUILD_SOURCE_VERSION
+      - printenv
+      - sbt clean universal:stage
+artifacts:
+  files:
+    - '**/*'
+  base-directory: target/universal/stage
