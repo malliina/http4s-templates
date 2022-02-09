@@ -14,8 +14,8 @@ phases:
       - echo $CODEBUILD_WEBHOOK_HEAD_REF
       - echo $CODEBUILD_SOURCE_VERSION
       - printenv
-      - sbt clean universal:stage
+      - sbt clean server/Universal/stage
 artifacts:
   files:
     - '**/*'
-  base-directory: target/universal/stage
+  base-directory: server/target/universal/stage

@@ -6,9 +6,9 @@ inThisBuild(
   )
 )
 
-val app = project
+val server = project
   .in(file("server"))
-  .enablePlugins(RevolverPlugin)
+  .enablePlugins(RevolverPlugin, JavaServerAppPackaging)
   .settings(
     libraryDependencies ++=
       Seq("ember-server", "dsl", "circe").map { m => "org.http4s" %% s"http4s-$m" % "0.23.10" } ++
@@ -30,6 +30,6 @@ val infra = project.in(file("infra")).settings(
   )
 )
 
-val root = project.in(file(".")).aggregate(app, infra)
+val root = project.in(file(".")).aggregate(server, infra)
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
