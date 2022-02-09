@@ -15,3 +15,5 @@ hydra.sbt
 .bloop
 out
 .bsp
+cdk.out
+cdk.context.json
