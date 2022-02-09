@@ -21,8 +21,6 @@ object Service extends IOApp:
   private val log = AppLogger(getClass)
   val noCache = `Cache-Control`(`no-cache`(), `no-store`, `must-revalidate`)
 
-  log.info("Starting...")
-
   def emberServer[F[_]: Async] =
     org.http4s.ember.server.EmberServerBuilder
       .default[F]

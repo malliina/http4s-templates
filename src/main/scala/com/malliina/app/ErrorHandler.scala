@@ -16,7 +16,7 @@ object ErrorHandler:
 class ErrorHandler[F[_]: Async] extends BasicService[F]:
   def apply: Request[F] => PartialFunction[Throwable, F[Response[F]]] =
     req => { case NonFatal(t) =>
-      log.error(s"Server error: ${req.method} ${req.pathInfo}. Exception $t", t)
+      log.error(s"Server error at ${req.method} ${req.pathInfo}.", t)
       serverErrorAt(req)
     }
 
