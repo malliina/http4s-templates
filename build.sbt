@@ -13,6 +13,7 @@ val app = project
         "org.slf4j" % "slf4j-api" % "1.7.35",
         "com.lihaoyi" %% "scalatags" % "0.11.1",
         "org.scalameta" %% "munit" % "0.7.29" % Test,
+        "org.typelevel" %% "munit-cats-effect-3" % "1.0.7" % Test,
         "com.malliina" %% "okclient-io" % "3.1.0" % Test
       ),
     testFrameworks += new TestFramework("munit.Framework")

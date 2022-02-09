@@ -2,18 +2,19 @@ package com.malliina.app
 
 import org.http4s.server.Server
 import com.malliina.app.Service
+import cats.effect.kernel.Resource
 import cats.effect.IO
-import cats.effect.unsafe.implicits.global
 import com.malliina.http.FullUrl
 import com.malliina.http.io.HttpClientIO
+import munit.CatsEffectSuite
 
 import java.util.concurrent.atomic.AtomicReference
 
-class ServerTests extends munit.FunSuite with ServerSuite:
+class ServerTests extends CatsEffectSuite with ServerSuite:
   test("make request") {
     val s = server()
-    val res = s.client.get(s.baseHttpUrl).unsafeRunSync()
-    assertEquals(res.code, 200)
+    val req = s.client.get(s.baseHttpUrl)
+    req.map(res => assertEquals(res.code, 200))
   }
 
 case class ServerProps(server: Server, client: HttpClientIO):
@@ -21,19 +22,10 @@ case class ServerProps(server: Server, client: HttpClientIO):
   def baseHttpUrl: FullUrl = FullUrl("http", s"localhost:$port", "")
 
 trait ServerSuite:
-  self: munit.FunSuite =>
-  val server: Fixture[ServerProps] = new Fixture[ServerProps]("server"):
-    private var props: Option[ServerProps] = None
-    val finalizer = new AtomicReference[IO[Unit]](IO.pure(()))
-    override def apply(): ServerProps = props.get
-    override def beforeAll(): Unit =
-      super.beforeAll()
-      val (instance, closable) = Service.emberServer[IO].allocated.unsafeRunSync()
-      val httpClient = HttpClientIO()
-      props = Option(ServerProps(instance, httpClient))
-      finalizer.set(IO(httpClient.close()) >> closable)
-    override def afterAll(): Unit =
-      super.afterAll()
-      finalizer.get().unsafeRunSync()
-
+  self: CatsEffectSuite =>
+  val resource: Resource[IO, ServerProps] = for
+    s <- Service.emberServer[IO]
+    c <- Resource.make(IO(HttpClientIO()))(c => IO(c.close()))
+  yield ServerProps(s, c)
+  val server = ResourceSuiteLocalFixture("server", resource)
   override def munitFixtures: Seq[Fixture[?]] = Seq(server)
