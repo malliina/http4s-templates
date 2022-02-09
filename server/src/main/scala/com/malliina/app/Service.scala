@@ -14,6 +14,7 @@ import org.http4s.headers.`Cache-Control`
 import org.http4s.server.middleware.{GZip, HSTS}
 import org.http4s.server.{Router, Server}
 import org.http4s.{HttpRoutes, *}
+import com.malliina.app.build.BuildInfo
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
@@ -39,10 +40,13 @@ object Service extends IOApp:
 
 class Service[F[_]: Async] extends BasicService[F]:
   val html = AppHtml()
-  val routes = HttpRoutes.of[F] { case req @ GET -> Root =>
-    ok(html.index.tags)
+  val routes = HttpRoutes.of[F] {
+    case req @ GET -> Root =>
+      ok(html.index.tags)
+    case req @ GET -> Root / "health" =>
+      ok(BuildMeta.fromBuild.asJson)
   }
-  val static = StaticService[F](fs2.io.file.Path("public"))
+  val static = StaticService[F](fs2.io.file.Path(BuildInfo.assetsDir))
   val router: Kleisli[F, Request[F], Response[F]] = gzipHsts {
     Router("/" -> routes, "/assets" -> static.routes)
   }

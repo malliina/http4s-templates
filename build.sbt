@@ -1,5 +1,8 @@
 import com.typesafe.sbt.packager.MappingsHelper.{contentOf, directory}
 
+import scala.sys.process.Process
+import scala.util.Try
+
 inThisBuild(
   Seq(
     organization := "com.malliina",
@@ -10,7 +13,7 @@ inThisBuild(
 
 val server = project
   .in(file("server"))
-  .enablePlugins(RevolverPlugin, JavaServerAppPackaging)
+  .enablePlugins(RevolverPlugin, BuildInfoPlugin, JavaServerAppPackaging)
   .settings(
     libraryDependencies ++=
       Seq("ember-server", "dsl", "circe").map { m => "org.http4s" %% s"http4s-$m" % "0.23.10" } ++
@@ -27,15 +30,31 @@ val server = project
     Universal / javaOptions ++= Seq("-J-Xmx256m"),
     Universal / mappings ++=
       contentOf(baseDirectory.value / "src" / "universal") ++
-      directory(baseDirectory.value / "public")
+      directory(baseDirectory.value / "public"),
+    buildInfoPackage := "com.malliina.app.build",
+    buildInfoKeys := Seq[BuildInfoKey](
+      name,
+      version,
+      "assetsDir" -> "public",
+      "gitHash" -> gitHash
+    )
   )
 
-val infra = project.in(file("infra")).settings(
-  libraryDependencies ++= Seq(
-    "software.amazon.awscdk" % "aws-cdk-lib" % "2.12.0"
+val infra = project.in(file("infra"))
+  .disablePlugins(RevolverPlugin)
+  .settings(
+    libraryDependencies ++= Seq(
+      "software.amazon.awscdk" % "aws-cdk-lib" % "2.12.0"
+    )
   )
-)
 
-val root = project.in(file(".")).aggregate(server, infra)
+val root = project.in(file("."))
+  .disablePlugins(RevolverPlugin)
+  .aggregate(server, infra)
+
+def gitHash = Try(Process("git rev-parse --short HEAD").lineStream.head).toOption
+  .orElse(sys.env.get("CODEBUILD_RESOLVED_SOURCE_VERSION").map(_.take(7)))
+  .orElse(sys.env.get("CODEBUILD_SOURCE_VERSION").map(_.take(7)))
+  .getOrElse("latest")
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
