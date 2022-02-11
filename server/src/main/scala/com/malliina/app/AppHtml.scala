@@ -1,10 +1,12 @@
 package com.malliina.app
 
+import com.malliina.http.FullUrl
 import scalatags.Text.all.*
 
 class AppHtml:
   val empty: Modifier = ""
   val titleTag = tag("title")
+  val googleUrl: FullUrl = url"https://www.google.com"
 
   def index = page { h1("Hello!") }
 
