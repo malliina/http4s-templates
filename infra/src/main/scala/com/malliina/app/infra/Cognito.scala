@@ -11,7 +11,8 @@ object Cognito:
     val s = Stack(construct, s"$env-$name", CDK.stackProps)
     Cognito(s, name, env)
 
-/** Creates a Cognito user pool with Google as an identity provider (social login).
+/** Creates a Cognito user pool with Google as an identity provider (social login). Modify the
+  * callback URLs as needed.
   *
   * One problem with this setup is
   * https://stackoverflow.com/questions/58154256/aws-cognito-how-to-force-select-account-when-signing-in-with-google.
@@ -85,3 +86,8 @@ class Cognito(stack: Stack, name: String, env: Env) extends CDKBuilders:
       .build()
   )
   app.getNode.addDependency(google)
+  outputs(stack)(
+    "PoolId" -> userPool.getUserPoolId,
+    "Domain" -> domain.getDomainName,
+    "ClientId" -> app.getUserPoolClientId
+  )
