@@ -3,6 +3,7 @@ package com.malliina.app
 import cats.Monad
 import cats.effect.Async
 import com.malliina.app.ErrorHandler.log
+import com.malliina.http.ResponseException
 import io.circe.syntax.EncoderOps
 import org.http4s.headers.{Connection, `Content-Length`}
 import org.http4s.{Headers, Request, Response, Status}
@@ -14,13 +15,10 @@ object ErrorHandler:
   private val log = AppLogger(getClass)
 
 class ErrorHandler[F[_]: Async] extends BasicService[F]:
-  def apply: Request[F] => PartialFunction[Throwable, F[Response[F]]] =
-    req => { case NonFatal(t) =>
-      log.error(s"Server error at ${req.method} ${req.pathInfo}.", t)
-      serverErrorAt(req)
-    }
-
   def partial: PartialFunction[Throwable, F[Response[F]]] =
+    case re: ResponseException =>
+      log.error(s"${re.response.asString}", re)
+      serverError
     case NonFatal(t) =>
       log.error(s"Server error.", t)
       serverError

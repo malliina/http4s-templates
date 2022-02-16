@@ -3,21 +3,27 @@ package com.malliina.app.auth
 import cats.MonadError
 import cats.effect.IO
 import cats.implicits.{toFlatMapOps, toFunctorOps}
+import com.malliina.app.auth.Cognito.log
 import com.malliina.http.io.{HttpClientF, HttpClientIO}
 import com.malliina.http.{FullUrl, OkHttpResponse}
+import com.malliina.util.AppLogger
 import com.malliina.values.{AccessToken, Email}
 import com.malliina.web.{CognitoIdValidator, CognitoTokens, CognitoTokensJson}
 
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 
+object Cognito:
+  private val log = AppLogger(getClass)
+
 class Cognito[F[_]](conf: CognitoConf, http: HttpClientF[F])(implicit F: MonadError[F, Throwable]):
+  log.info(s"Using cognito with client ID '${conf.id}'.")
   val domain = conf.domain
   val tokenUrl = domain / "oauth2" / "token"
   val userInfoUrl = domain / "oauth2" / "userInfo"
   private val authorizeBaseUrl = domain / "oauth2" / "authorize"
   private val logoutBaseUrl = domain / "logout"
-  val loginCallback = "http://localhost:9000/auth/callback"
+  val loginCallback = "http://localhost:9000/auth/login/callback"
   val logoutCallback = "http://localhost:9000/auth/logout/callback"
   private val authorizeParams = Map(
     "identity_provider" -> "Google",
@@ -49,7 +55,7 @@ class Cognito[F[_]](conf: CognitoConf, http: HttpClientF[F])(implicit F: MonadEr
           "grant_type" -> "authorization_code",
           "client_id" -> conf.id.value,
           "code" -> code,
-          "redirect_uri" -> "http://localhost:9000/auth/callback"
+          "redirect_uri" -> loginCallback
         ),
         Map(
           "Authorization" -> authorizationValue(conf.id.value, conf.secret.value)

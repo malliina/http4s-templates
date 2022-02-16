@@ -82,7 +82,7 @@ class Service[F[_]: Async](cognito: Cognito[F]) extends BasicService[F]:
         log.info(s"Logged out. Redirecting home.")
         res.removeCookie(userCookie(None))
       }
-    case req @ GET -> Root / "auth" / "callback" =>
+    case req @ GET -> Root / "auth" / "login" / "callback" =>
       log.info(s"Logging in, handling callback...")
       req.uri.query.params
         .get("code")

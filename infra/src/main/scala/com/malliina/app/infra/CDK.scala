@@ -16,6 +16,7 @@ object CDK:
     val app = new AWSApp()
     val vpc = VPCStack(app, "refvpc", VPCStack.CIDRs.default)
     val qa = AppEnv(app, "ref", Env.Qa, vpc.vpc)
+    val qaUsers = Cognito.stack(app, "pool", Env.Qa)
     val assembly = app.synth()
 
 enum Env(val name: String):
