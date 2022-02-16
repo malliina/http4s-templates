@@ -4,6 +4,7 @@ import org.http4s.server.Server
 import com.malliina.app.Service
 import cats.effect.kernel.Resource
 import cats.effect.IO
+import com.malliina.app.Tokens.OpaqueToken
 import com.malliina.http.FullUrl
 import com.malliina.http.io.HttpClientIO
 import munit.CatsEffectSuite
@@ -15,6 +16,11 @@ class ServerTests extends CatsEffectSuite with ServerSuite:
     val s = server()
     val req = s.client.get(s.baseHttpUrl)
     req.map(res => assertEquals(res.code, 200))
+  }
+
+  test("opaque types") {
+    val token: OpaqueToken = OpaqueToken("a.a.a").get
+    assertEquals(token.duplicate, "a.a.aa.a.a")
   }
 
 case class ServerProps(server: Server, client: HttpClientIO):
