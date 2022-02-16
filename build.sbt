@@ -20,9 +20,10 @@ val server = project
         Seq("core", "generic").map { m => "io.circe" %% s"circe-$m" % "0.14.1" } ++
         Seq("classic", "core").map { m => "ch.qos.logback" % s"logback-$m" % "1.2.10" } ++
         Seq(
+          "com.typesafe" % "config" % "1.4.2",
           "org.slf4j" % "slf4j-api" % "1.7.36",
           "com.lihaoyi" %% "scalatags" % "0.11.1",
-          "com.malliina" %% "okclient-io" % "3.1.0",
+          "com.malliina" %% "web-auth" % "6.1.5",
           "org.scalameta" %% "munit" % "0.7.29" % Test,
           "org.typelevel" %% "munit-cats-effect-3" % "1.0.7" % Test
         ),

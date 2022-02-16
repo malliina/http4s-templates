@@ -24,7 +24,7 @@ case class ServerProps(server: Server, client: HttpClientIO):
 trait ServerSuite:
   self: CatsEffectSuite =>
   val resource: Resource[IO, ServerProps] = for
-    s <- Service.emberServer[IO]
+    s <- Service.cognitoServer
     c <- Resource.make(IO(HttpClientIO()))(c => IO(c.close()))
   yield ServerProps(s, c)
   val server = ResourceSuiteLocalFixture("server", resource)
