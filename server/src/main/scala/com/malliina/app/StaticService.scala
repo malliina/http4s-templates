@@ -15,25 +15,29 @@ import scala.concurrent.duration.DurationInt
 object StaticService:
   private val log = AppLogger(getClass)
 
-class StaticService[F[_]: Async](publicDir: Path) extends BasicService[F]:
+class StaticService[F[_]: Async](publicPath: String) extends BasicService[F]:
   val fontExtensions = Seq(".woff", ".woff2", ".eot", ".ttf")
   val imageExtensions = Seq(".png", ".jpg", ".jpeg", ".ico")
   val webExtensions = Seq(".html", ".js", ".map", ".css")
   val supportedExtensions =
     webExtensions ++ fontExtensions ++ imageExtensions
 
-  log.info(s"Reading assets from '${publicDir.absolute}'.")
+  val publicDir = fs2.io.file.Path(publicPath)
+//  log.info(s"Reading assets from '${publicDir}'.")
 
   val routes = HttpRoutes.of[F] {
     case req @ GET -> rest if supportedExtensions.exists(rest.toString.endsWith) =>
-      val file = rest.segments.mkString("/")
+      val file: String = rest.segments.mkString("/")
       val isCacheable = file.count(_ == '.') == 2
       val cacheHeaders =
         if isCacheable then NonEmptyList.of(`max-age`(365.days), `public`)
         else NonEmptyList.of(`no-cache`())
-      log.debug(s"Searching for '$file' in '$publicDir'...")
+      val resourcePath = s"$publicPath/$file"
+      val filePath = publicDir.resolve(file)
+      log.info(s"Searching for '$resourcePath'...")
       StaticFile
-        .fromPath(publicDir.resolve(file), Option(req))
+        .fromResource(resourcePath, Option(req))
+//      StaticFile.fromPath(filePath, Option(req))
         .map(_.putHeaders(`Cache-Control`(cacheHeaders)))
         .fold(onNotFound(req))(_.pure[F])
         .flatten

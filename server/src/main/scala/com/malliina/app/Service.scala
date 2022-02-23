@@ -49,7 +49,7 @@ class Service[F[_]: Async] extends BasicService[F]:
     case req @ GET -> Root / "health" =>
       ok(BuildMeta.fromBuild.asJson)
   }
-  val static = StaticService[F](fs2.io.file.Path(BuildInfo.assetsDir))
+  val static = StaticService[F](BuildInfo.assetsDir)
   val router: Kleisli[F, Request[F], Response[F]] = gzipHsts {
     Router("/" -> routes, "/assets" -> static.routes)
   }

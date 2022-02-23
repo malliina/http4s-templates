@@ -38,7 +38,8 @@ val server = project
       "assetsDir" -> "public",
       "gitHash" -> gitHash
     ),
-    assembly / assemblyJarName := "app.jar"
+    assembly / assemblyJarName := "app.jar",
+    Compile / unmanagedResourceDirectories += baseDirectory.value / "assets"
   )
 
 val infra = project
