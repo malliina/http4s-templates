@@ -11,6 +11,8 @@ inThisBuild(
   )
 )
 
+val assetsDir = settingKey[File]("Path to public assets")
+
 val server = project
   .in(file("server"))
   .enablePlugins(RevolverPlugin, BuildInfoPlugin, JavaServerAppPackaging)
@@ -27,15 +29,16 @@ val server = project
           "org.typelevel" %% "munit-cats-effect-3" % "1.0.7" % Test
         ),
     testFrameworks += new TestFramework("munit.Framework"),
+    assetsDir := baseDirectory.value / "assets" / "public",
     Universal / javaOptions ++= Seq("-J-Xmx256m"),
     Universal / mappings ++=
-      contentOf(baseDirectory.value / "src" / "universal") ++
-        directory(baseDirectory.value / "assets" / "public"),
+      contentOf(baseDirectory.value / "src" / "universal") ++ directory(assetsDir.value),
     buildInfoPackage := "com.malliina.app.build",
     buildInfoKeys := Seq[BuildInfoKey](
       name,
       version,
-      "assetsDir" -> "assets/public",
+      "assetsDir" -> assetsDir.value.relativeTo(baseDirectory.value).get.toString,
+      "assetsPath" -> "public",
       "gitHash" -> gitHash
     ),
     assembly / assemblyJarName := "app.jar",
