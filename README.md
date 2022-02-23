@@ -20,3 +20,5 @@ For example, [kopp-small.jpg](server/public/kopp-small.jpg) is available at http
 |------------------|----------------------------------------------------------|
 | [server](server) | http4s server                                            |
 | [infra](infra)   | Infrastructure in [AWS CDK](https://aws.amazon.com/cdk/) |
+
+Infra code for Azure is [here](https://github.com/malliina/bicep/blob/master/javawebapp.bicep).

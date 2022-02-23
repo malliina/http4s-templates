@@ -23,7 +23,7 @@ class StaticService[F[_]: Async](publicPath: String) extends BasicService[F]:
     webExtensions ++ fontExtensions ++ imageExtensions
 
   val publicDir = fs2.io.file.Path(publicPath)
-//  log.info(s"Reading assets from '${publicDir}'.")
+  log.info(s"Reading assets from '$publicDir'.")
 
   val routes = HttpRoutes.of[F] {
     case req @ GET -> rest if supportedExtensions.exists(rest.toString.endsWith) =>
@@ -34,10 +34,10 @@ class StaticService[F[_]: Async](publicPath: String) extends BasicService[F]:
         else NonEmptyList.of(`no-cache`())
       val resourcePath = s"$publicPath/$file"
       val filePath = publicDir.resolve(file)
-      log.info(s"Searching for '$resourcePath'...")
+      log.info(s"Searching for '$filePath'...")
       StaticFile
         .fromResource(resourcePath, Option(req))
-//      StaticFile.fromPath(filePath, Option(req))
+        .orElse(StaticFile.fromPath(filePath, Option(req)))
         .map(_.putHeaders(`Cache-Control`(cacheHeaders)))
         .fold(onNotFound(req))(_.pure[F])
         .flatten

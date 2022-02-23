@@ -30,12 +30,12 @@ val server = project
     Universal / javaOptions ++= Seq("-J-Xmx256m"),
     Universal / mappings ++=
       contentOf(baseDirectory.value / "src" / "universal") ++
-        directory(baseDirectory.value / "public"),
+        directory(baseDirectory.value / "assets" / "public"),
     buildInfoPackage := "com.malliina.app.build",
     buildInfoKeys := Seq[BuildInfoKey](
       name,
       version,
-      "assetsDir" -> "public",
+      "assetsDir" -> "assets/public",
       "gitHash" -> gitHash
     ),
     assembly / assemblyJarName := "app.jar",
