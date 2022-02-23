@@ -28,8 +28,7 @@ jobs:
       - name: Build with sbt
         run: |
           ls -al
-          cd server
-          sbt build
+          sbt server/assembly
       - name: Deploy to Azure WebApp
         uses: azure/webapps-deploy@v2
         with:
