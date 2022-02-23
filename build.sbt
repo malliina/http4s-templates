@@ -37,7 +37,8 @@ val server = project
       version,
       "assetsDir" -> "public",
       "gitHash" -> gitHash
-    )
+    ),
+    assembly / assemblyJarName := "app.jar"
   )
 
 val infra = project

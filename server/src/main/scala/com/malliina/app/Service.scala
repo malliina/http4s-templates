@@ -4,7 +4,7 @@ import cats.Applicative
 import cats.data.Kleisli
 import cats.effect.kernel.Resource
 import cats.effect.{Async, ExitCode, IO, IOApp}
-import com.comcast.ip4s.{host, port}
+import com.comcast.ip4s.{host, port, Port}
 import com.malliina.app.Service.noCache
 import io.circe.syntax.EncoderOps
 import org.http4s.CacheDirective.{`must-revalidate`, `no-cache`, `no-store`}
@@ -23,11 +23,14 @@ object Service extends IOApp:
   private val log = AppLogger(getClass)
   val noCache = `Cache-Control`(`no-cache`(), `no-store`, `must-revalidate`)
 
+  // SERVER_PORT is provided by Azure afaik
+  val serverPort = sys.env.get("SERVER_PORT").flatMap(s => Port.fromString(s)).getOrElse(port"9000")
+
   def emberServer[F[_]: Async] =
     EmberServerBuilder
       .default[F]
       .withHost(host"0.0.0.0")
-      .withPort(port"9000")
+      .withPort(serverPort)
       .withErrorHandler(ErrorHandler[F].partial)
       .withHttpApp(Service[F].router)
       .withRequestHeaderReceiveTimeout(30.seconds)
