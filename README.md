@@ -7,12 +7,12 @@ This is an [http4s](https://http4s.org/) project template.
 
 Navigate to http://localhost:9000.
 
-| Endpoint  | Returns                                    |
-|-----------|--------------------------------------------|
-| /health   | An example OK 200 response                 |
-| /assets/* | Assets from [server/public](server/public) |
+| Endpoint  | Returns                                                  |
+|-----------|----------------------------------------------------------|
+| /health   | An example OK 200 response                               |
+| /assets/* | Assets from [server/assets/public](server/assets/public) |
 
-For example, [kopp-small.jpg](server/public/kopp-small.jpg) is available at http://localhost:9000/assets/kopp-small.jpg.
+For example, [kopp-small.jpg](server/assets/public/kopp-small.jpg) is available at http://localhost:9000/assets/kopp-small.jpg.
 
 ## Repository Structure
 
