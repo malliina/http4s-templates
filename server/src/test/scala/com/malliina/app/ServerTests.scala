@@ -19,8 +19,10 @@ class ServerTests extends CatsEffectSuite with ServerSuite:
   }
 
   test("opaque types") {
-    val token: OpaqueToken = OpaqueToken("a.a.a").get
+    val token: OpaqueToken = OpaqueToken("a.a.a").toOption.get
     assertEquals(token.duplicate, "a.a.aa.a.a")
+    val jwt: OpaqueToken = jwt"a.b.c"
+//    val jwt2: OpaqueToken = jwt"a.b" // Doesn't compile
   }
 
 case class ServerProps(server: Server, client: HttpClientIO):
@@ -31,7 +33,7 @@ trait ServerSuite:
   self: CatsEffectSuite =>
   val resource: Resource[IO, ServerProps] = for
     s <- Service.emberServer[IO]
-    c <- Resource.make(IO(HttpClientIO()))(c => IO(c.close()))
+    c <- HttpClientIO.resource
   yield ServerProps(s, c)
   val server = ResourceSuiteLocalFixture("server", resource)
   override def munitFixtures: Seq[Fixture[?]] = Seq(server)

@@ -26,7 +26,7 @@ object Service extends IOApp:
   // SERVER_PORT is provided by Azure afaik
   val serverPort = sys.env.get("SERVER_PORT").flatMap(s => Port.fromString(s)).getOrElse(port"9000")
 
-  def emberServer[F[_]: Async] =
+  def emberServer[F[_]: Async]: Resource[F, Server] =
     EmberServerBuilder
       .default[F]
       .withHost(host"0.0.0.0")
