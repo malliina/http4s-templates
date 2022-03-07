@@ -17,5 +17,5 @@ object Literals:
         .build(s)
         .fold(
           err => Left(err.message),
-          ok => Right('{ _root_.com.malliina.http.FullUrl.build(${ Expr(s) }).toOption.get })
+          ok => Right('{ FullUrl.build(${ Expr(s) }).toOption.get })
         )
