@@ -22,3 +22,11 @@ For example, [kopp-small.jpg](server/assets/public/kopp-small.jpg) is available 
 | [infra](infra)   | Infrastructure in [AWS CDK](https://aws.amazon.com/cdk/) |
 
 Infra code for Azure is [here](https://github.com/malliina/bicep/blob/master/javawebapp.bicep).
+
+## Deployment
+
+Setup infrastructure:
+
+    cdk boostrap
+    cdk deploy refvpc
+    cdk deploy qa-ref

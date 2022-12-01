@@ -148,7 +148,7 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
       list(
         ManagedPolicy.fromAwsManagedPolicyName("AmazonS3FullAccess"),
         ManagedPolicy.fromAwsManagedPolicyName("AWSCodeCommitFullAccess"),
-        ManagedPolicy.fromAwsManagedPolicyName("AWSCodePipelineFullAccess"),
+        ManagedPolicy.fromAwsManagedPolicyName("AWSCodePipeline_FullAccess"),
         ManagedPolicy.fromAwsManagedPolicyName("AdministratorAccess-AWSElasticBeanstalk")
       )
     )
