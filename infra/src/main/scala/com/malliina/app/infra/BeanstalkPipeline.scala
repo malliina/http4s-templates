@@ -136,7 +136,7 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
       .build()
   val repo = Repository.Builder
     .create(stack, makeId("Code"))
-    .repositoryName(makeId("Repo"))
+    .repositoryName(envName)
     .description(s"Repository for $envName environment of app $appName.")
     .build()
   val sourceOut = new Artifact()
