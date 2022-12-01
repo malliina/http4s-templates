@@ -2,7 +2,7 @@ package com.malliina.app.infra
 
 import com.malliina.app.infra.VPCStack.CIDRs
 import software.amazon.awscdk.Stack
-import software.amazon.awscdk.services.ec2.Vpc
+import software.amazon.awscdk.services.ec2.{IIpAddresses, IpAddresses, Vpc}
 import software.constructs.Construct
 
 import scala.jdk.CollectionConverters.ListHasAsScala
@@ -36,7 +36,7 @@ class VPCStack(scope: Construct, stackName: String, cidrs: CIDRs)
     */
   val vpc = Vpc.Builder
     .create(stack, "VPC")
-    .cidr(cidrs.vpc)
+    .ipAddresses(IpAddresses.cidr(cidrs.vpc))
     .enableDnsSupport(true)
     .enableDnsHostnames(true)
     .maxAzs(2)
