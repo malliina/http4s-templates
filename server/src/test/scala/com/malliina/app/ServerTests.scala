@@ -5,7 +5,7 @@ import com.malliina.app.Service
 import cats.effect.kernel.Resource
 import cats.effect.IO
 import com.malliina.app.Tokens.OpaqueToken
-import com.malliina.http.FullUrl
+import com.malliina.http.{FullUrl, HttpClient}
 import com.malliina.http.io.HttpClientIO
 import munit.CatsEffectSuite
 
@@ -25,7 +25,7 @@ class ServerTests extends CatsEffectSuite with ServerSuite:
 //    val jwt2: OpaqueToken = jwt"a.b" // Doesn't compile
   }
 
-case class ServerProps(server: Server, client: HttpClientIO):
+case class ServerProps(server: Server, client: HttpClient[IO]):
   def port = server.address.getPort
   def baseHttpUrl: FullUrl = FullUrl("http", s"localhost:$port", "")
 
@@ -33,7 +33,7 @@ trait ServerSuite:
   self: CatsEffectSuite =>
   val resource: Resource[IO, ServerProps] = for
     s <- Service.emberServer[IO]
-    c <- HttpClientIO.resource
+    c <- HttpClientIO.resource[IO]
   yield ServerProps(s, c)
   val server = ResourceSuiteLocalFixture("server", resource)
   override def munitFixtures: Seq[Fixture[?]] = Seq(server)

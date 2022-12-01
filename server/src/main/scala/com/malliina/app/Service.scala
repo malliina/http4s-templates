@@ -35,6 +35,7 @@ object Service extends IOApp:
       .withHttpApp(Service[F].router)
       .withRequestHeaderReceiveTimeout(30.seconds)
       .withIdleTimeout(60.seconds)
+      .withShutdownTimeout(1.millis)
       .withHttp2
       .build
 
