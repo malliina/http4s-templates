@@ -27,9 +27,7 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
     .description("Built with CDK in Helsinki")
     .build()
   val appName = app.getApplicationName
-  val namePrefix = "MyCdk"
-  val dockerSolutionStackName = "64bit Amazon Linux 2 v3.1.0 running Docker"
-  val javaSolutionStackName = "64bit Amazon Linux 2 v3.2.8 running Corretto 11"
+  val javaSolutionStackName = "64bit Amazon Linux 2 v3.4.1 running Corretto 17"
   val solutionStack = javaSolutionStackName
 
   val branch = "master"
@@ -37,9 +35,9 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
   val architecture: Arch = Arch.Arm64
 
   def buildImage: IBuildImage = architecture match
-    case Arch.Arm64  => LinuxBuildImage.AMAZON_LINUX_2_ARM_2
-    case Arch.X86_64 => LinuxBuildImage.AMAZON_LINUX_2_3
-    case Arch.I386   => LinuxBuildImage.STANDARD_5_0
+    case Arch.Arm64  => LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_2_0
+    case Arch.X86_64 => LinuxBuildImage.AMAZON_LINUX_2_4
+    case Arch.I386   => LinuxBuildImage.STANDARD_6_0
 
   def buildComputeType = architecture match
     case Arch.Arm64 => ComputeType.SMALL
@@ -130,12 +128,10 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
       .buildImage(buildImage)
       .computeType(buildComputeType)
       .build()
-  val buildSpec =
-    if solutionStack == javaSolutionStackName then "buildspec-java.yml" else "buildspec.yml"
   val codebuildProject =
     PipelineProject.Builder
       .create(stack, makeId("Build"))
-      .buildSpec(BuildSpec.fromSourceFilename(buildSpec))
+      .buildSpec(BuildSpec.fromSourceFilename("buildspec-java.yml"))
       .environment(buildEnv)
       .build()
   val repo = Repository.Builder
@@ -197,7 +193,7 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
           .stageName("Deploy")
           .actions(
             list[IAction](
-              new BeanstalkDeployAction(
+              BeanstalkDeployAction(
                 EBDeployActionData(
                   "DeployAction",
                   buildOut,

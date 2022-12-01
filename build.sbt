@@ -7,7 +7,7 @@ inThisBuild(
   Seq(
     organization := "com.malliina",
     version := "0.0.1",
-    scalaVersion := "3.1.1"
+    scalaVersion := "3.2.1"
   )
 )
 
