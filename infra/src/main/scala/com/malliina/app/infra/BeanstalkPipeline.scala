@@ -85,10 +85,10 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
         ),
         optionSetting("aws:elasticbeanstalk:environment", "ServiceRole", serviceRole.getRoleName),
         ebEnvVar("PORT", "9000"),
-        ebEnvVar(
-          "APPLICATION_SECRET",
-          "{{resolve:secretsmanager:dev/refapp/secrets:SecretString:appsecret}}"
-        ),
+//        ebEnvVar(
+//          "APPLICATION_SECRET",
+//          "{{resolve:secretsmanager:dev/refapp/secrets:SecretString:appsecret}}"
+//        ),
         asgMinSize(1),
         asgMaxSize(2),
         ebEnvironment("EnvironmentType", "LoadBalanced"),
@@ -108,7 +108,7 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
         ebElbSubnets(vpc.getPublicSubnets.asScala.toList),
         ebInstanceType(t4g.small),
         ebDeployment("DeploymentPolicy", "AllAtOnce"),
-        supportedArchitectures(Seq(Arch.Arm64)),
+        supportedArchitectures(Seq(architecture)),
         streamLogs
       )
     )
