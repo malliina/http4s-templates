@@ -22,7 +22,7 @@ object BeanstalkPipeline:
 class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuilders:
   val region = stack.getRegion
   val account = stack.getAccount
-  val envName = s"$prefix-app"
+  val envName = prefix
   val app = CfnApplication.Builder
     .create(stack, "MyCdkBeanstalk")
     .applicationName(envName)
@@ -31,8 +31,7 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
   val appName = app.getApplicationName
   val appArn =
     s"arn:aws:elasticbeanstalk:$region:$account:application/$appName"
-  val javaSolutionStackName = "64bit Amazon Linux 2 v3.4.1 running Corretto 17"
-  val solutionStack = javaSolutionStackName
+  val solutionStack = "64bit Amazon Linux 2 v3.4.1 running Corretto 17"
 
   val branch = "master"
 
@@ -186,7 +185,7 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
               buildOut,
               appName,
               beanstalkEnv.getEnvironmentName,
-              allowStatement(
+              allowAction(
                 "elasticbeanstalk:*",
                 appArn,
                 envArn,

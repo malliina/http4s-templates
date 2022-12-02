@@ -27,13 +27,25 @@ class BeanstalkDeployActionProperties(actionName: String, input: Artifact) exten
   override def getProvider: String = "ElasticBeanstalk"
   override def getInputs: JavaList[Artifact] = Seq(input).asJava
 
-class BeanstalkDeployAction(conf: EBDeployActionData) extends IAction:
+class BeanstalkDeployAction(conf: EBDeployActionData) extends IAction with CDKBuilders:
   override def getActionProperties: ActionProperties =
     BeanstalkDeployActionProperties(conf.actionName, conf.input)
+  val actions = Seq(
+    "ec2:*",
+    "ecs:*",
+    "elasticloadbalancing:*",
+    "autoscaling:*",
+    "cloudwatch:*",
+    "s3:*",
+    "sns:*",
+    "cloudformation:*",
+    "sqs:*"
+  )
 
   override def bind(scope: Construct, stage: IStage, options: ActionBindOptions): ActionConfig =
-    options.getBucket.grantRead(options.getRole)
+    options.getBucket.grantReadWrite(options.getRole)
     options.getRole.addToPrincipalPolicy(conf.policy)
+    options.getRole.addToPrincipalPolicy(allowStatement(actions, Seq("*")))
     ActionConfig
       .builder()
       .configuration(

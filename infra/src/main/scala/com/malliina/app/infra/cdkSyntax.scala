@@ -23,12 +23,14 @@ trait CDKBuilders extends OptionSettings:
     .create()
     .statements(list(statements*))
     .build()
-  def allowStatement(action: String, arn: String, moreArns: String*) =
+  def allowAction(action: String, arn: String, moreArns: String*) =
+    allowStatement(Seq(action), Seq(arn) ++ moreArns)
+  def allowStatement(actions: Seq[String], arns: Seq[String]) =
     PolicyStatement.Builder
       .create()
-      .actions(list(action))
+      .actions(list(actions*))
       .effect(Effect.ALLOW)
-      .resources(list(arn +: moreArns*))
+      .resources(list(arns*))
       .build()
   def stage(name: String)(actions: IAction*) =
     StageProps.builder().stageName(name).actions(list(actions*)).build()
