@@ -7,7 +7,7 @@ import software.amazon.awscdk.services.codepipeline.actions.{CodeBuildAction, Co
 import software.amazon.awscdk.services.codepipeline.{Artifact, IAction, Pipeline, StageProps}
 import software.amazon.awscdk.services.ec2.{IVpc, Vpc, VpcLookupOptions}
 import software.amazon.awscdk.services.elasticbeanstalk.{CfnApplication, CfnConfigurationTemplate, CfnEnvironment}
-import software.amazon.awscdk.services.iam.{CfnInstanceProfile, ManagedPolicy, Role}
+import software.amazon.awscdk.services.iam.{CfnInstanceProfile, ManagedPolicy, PolicyDocument, Role}
 
 import scala.jdk.CollectionConverters.ListHasAsScala
 
@@ -27,6 +27,8 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
     .description("Built with CDK in Helsinki")
     .build()
   val appName = app.getApplicationName
+  val appArn =
+    s"arn:aws:elasticbeanstalk:${stack.getRegion}:${stack.getAccount}:application/$appName"
   val javaSolutionStackName = "64bit Amazon Linux 2 v3.4.1 running Corretto 17"
   val solutionStack = javaSolutionStackName
 
@@ -62,8 +64,7 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
     .assumedBy(principal("ec2.amazonaws.com"))
     .managedPolicies(
       list(
-        ManagedPolicy.fromAwsManagedPolicyName("AWSElasticBeanstalkWebTier"),
-        ManagedPolicy.fromAwsManagedPolicyName("AmazonS3FullAccess")
+        ManagedPolicy.fromAwsManagedPolicyName("AWSElasticBeanstalkWebTier")
       )
     )
     .build()
@@ -146,64 +147,49 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
     .assumedBy(principal("codepipeline.amazonaws.com"))
     .managedPolicies(
       list(
-        ManagedPolicy.fromAwsManagedPolicyName("AmazonS3FullAccess"),
-        ManagedPolicy.fromAwsManagedPolicyName("AWSCodeCommitFullAccess"),
-        ManagedPolicy.fromAwsManagedPolicyName("AWSCodePipeline_FullAccess"),
-        ManagedPolicy.fromAwsManagedPolicyName("AdministratorAccess-AWSElasticBeanstalk")
+        ManagedPolicy.fromAwsManagedPolicyName("AWSCodePipeline_FullAccess")
+      )
+    )
+    .inlinePolicies(
+      map(
+        "BeanstalkPolicy" -> policy(allowStatement("elasticbeanstalk:*", appArn))
       )
     )
     .build()
+  repo.grantPullPush(pipelineRole)
   val pipeline: Pipeline = Pipeline.Builder
     .create(stack, makeId("Pipeline"))
     .role(pipelineRole)
     .stages(
       list[StageProps](
-        StageProps
-          .builder()
-          .stageName("Source")
-          .actions(
-            list[IAction](
-              CodeCommitSourceAction.Builder
-                .create()
-                .actionName("SourceAction")
-                .repository(repo)
-                .branch(branch)
-                .output(sourceOut)
-                .build()
+        stage("Source")(
+          CodeCommitSourceAction.Builder
+            .create()
+            .actionName("SourceAction")
+            .repository(repo)
+            .branch(branch)
+            .output(sourceOut)
+            .build()
+        ),
+        stage("Build")(
+          CodeBuildAction.Builder
+            .create()
+            .actionName("BuildAction")
+            .project(codebuildProject)
+            .input(sourceOut)
+            .outputs(list(buildOut))
+            .build()
+        ),
+        stage("Deploy")(
+          BeanstalkDeployAction(
+            EBDeployActionData(
+              "DeployAction",
+              buildOut,
+              appName,
+              beanstalkEnv.getEnvironmentName
             )
           )
-          .build(),
-        StageProps
-          .builder()
-          .stageName("Build")
-          .actions(
-            list[IAction](
-              CodeBuildAction.Builder
-                .create()
-                .actionName("BuildAction")
-                .project(codebuildProject)
-                .input(sourceOut)
-                .outputs(list(buildOut))
-                .build()
-            )
-          )
-          .build(),
-        StageProps
-          .builder()
-          .stageName("Deploy")
-          .actions(
-            list[IAction](
-              BeanstalkDeployAction(
-                EBDeployActionData(
-                  "DeployAction",
-                  buildOut,
-                  appName,
-                  beanstalkEnv.getEnvironmentName
-                )
-              )
-            )
-          )
-          .build()
+        )
       )
     )
     .build()

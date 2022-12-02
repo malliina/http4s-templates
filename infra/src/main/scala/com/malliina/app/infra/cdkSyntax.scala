@@ -1,9 +1,10 @@
 package com.malliina.app.infra
 
+import software.amazon.awscdk.services.codepipeline.{IAction, StageProps}
 import software.amazon.awscdk.{CfnOutput, Stack}
 import software.amazon.awscdk.services.ec2.ISubnet
 import software.amazon.awscdk.services.elasticbeanstalk.CfnConfigurationTemplate.ConfigurationOptionSettingProperty
-import software.amazon.awscdk.services.iam.ServicePrincipal
+import software.amazon.awscdk.services.iam.{Effect, PolicyDocument, PolicyStatement, ServicePrincipal}
 
 import scala.jdk.CollectionConverters.{MapHasAsJava, SeqHasAsJava}
 
@@ -18,6 +19,19 @@ trait CDKBuilders extends OptionSettings:
       .value(v)
       .build()
   }
+  def policy(statements: PolicyStatement*) = PolicyDocument.Builder
+    .create()
+    .statements(list(statements*))
+    .build()
+  def allowStatement(action: String, arn: String, moreArns: String*) =
+    PolicyStatement.Builder
+      .create()
+      .actions(list(action))
+      .effect(Effect.ALLOW)
+      .resources(list(arn +: moreArns*))
+      .build()
+  def stage(name: String)(actions: IAction*) =
+    StageProps.builder().stageName(name).actions(list(actions*)).build()
 
 sealed abstract class Arch(val name: String):
   override def toString = name
