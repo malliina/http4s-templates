@@ -24,7 +24,11 @@ object Service extends IOApp:
   val noCache = `Cache-Control`(`no-cache`(), `no-store`, `must-revalidate`)
 
   // SERVER_PORT is provided by Azure afaik
-  val serverPort = sys.env.get("SERVER_PORT").flatMap(s => Port.fromString(s)).getOrElse(port"9000")
+  val serverPort = sys.env
+    .get("SERVER_PORT")
+    .orElse(sys.env.get("PORT"))
+    .flatMap(s => Port.fromString(s))
+    .getOrElse(port"9000")
 
   def emberServer[F[_]: Async]: Resource[F, Server] =
     EmberServerBuilder
