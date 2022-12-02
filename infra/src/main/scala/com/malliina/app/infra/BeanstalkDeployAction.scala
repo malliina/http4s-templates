@@ -3,7 +3,7 @@ package com.malliina.app.infra
 import java.util.List as JavaList
 import software.amazon.awscdk.services.codepipeline.*
 import software.amazon.awscdk.services.events.{IRuleTarget, Rule, RuleProps}
-import software.amazon.awscdk.services.iam.ManagedPolicy
+import software.amazon.awscdk.services.iam.{ManagedPolicy, Policy, PolicyDocument, PolicyStatement}
 import software.amazon.jsii.*
 import software.constructs.Construct
 
@@ -13,7 +13,8 @@ case class EBDeployActionData(
   actionName: String,
   input: Artifact,
   applicationName: String,
-  environmentName: String
+  environmentName: String,
+  policy: PolicyStatement
 )
 
 /** Home-made Elastic Beanstalk deploy action because https://github.com/aws/aws-cdk/issues/2516.
@@ -28,13 +29,11 @@ class BeanstalkDeployActionProperties(actionName: String, input: Artifact) exten
 
 class BeanstalkDeployAction(conf: EBDeployActionData) extends IAction:
   override def getActionProperties: ActionProperties =
-    new BeanstalkDeployActionProperties(conf.actionName, conf.input)
+    BeanstalkDeployActionProperties(conf.actionName, conf.input)
 
   override def bind(scope: Construct, stage: IStage, options: ActionBindOptions): ActionConfig =
     options.getBucket.grantRead(options.getRole)
-    options.getRole.addManagedPolicy(
-      ManagedPolicy.fromAwsManagedPolicyName("AdministratorAccess-AWSElasticBeanstalk")
-    )
+    options.getRole.addToPrincipalPolicy(conf.policy)
     ActionConfig
       .builder()
       .configuration(
@@ -51,4 +50,4 @@ class BeanstalkDeployAction(conf: EBDeployActionData) extends IAction:
   override def onStateChange(name: String, target: IRuleTarget): Rule = fail
   override def onStateChange(name: String): Rule = fail
 
-  private def fail = throw new Exception("Not supported.")
+  private def fail = throw Exception("Not supported.")

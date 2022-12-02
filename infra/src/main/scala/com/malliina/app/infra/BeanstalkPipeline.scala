@@ -20,6 +20,8 @@ object BeanstalkPipeline:
   )
 
 class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuilders:
+  val region = stack.getRegion
+  val account = stack.getAccount
   val envName = s"$prefix-app"
   val app = CfnApplication.Builder
     .create(stack, "MyCdkBeanstalk")
@@ -28,7 +30,7 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
     .build()
   val appName = app.getApplicationName
   val appArn =
-    s"arn:aws:elasticbeanstalk:${stack.getRegion}:${stack.getAccount}:application/$appName"
+    s"arn:aws:elasticbeanstalk:$region:$account:application/$appName"
   val javaSolutionStackName = "64bit Amazon Linux 2 v3.4.1 running Corretto 17"
   val solutionStack = javaSolutionStackName
 
@@ -120,6 +122,8 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
     .environmentName(envName)
     .templateName(configurationTemplate.getRef)
     .build()
+  val envArn =
+    s"arn:aws:elasticbeanstalk:$region:$account:environment/${beanstalkEnv.getApplicationName}/${beanstalkEnv.getEnvironmentName}"
 
   // Pipeline
 
@@ -142,6 +146,7 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
     .build()
   val sourceOut = new Artifact()
   val buildOut = new Artifact()
+  val beanstalkStatement = allowStatement("elasticbeanstalk:*", envArn)
   val pipelineRole = Role.Builder
     .create(stack, makeId("PipelineRole"))
     .assumedBy(principal("codepipeline.amazonaws.com"))
@@ -152,7 +157,7 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
     )
     .inlinePolicies(
       map(
-        "BeanstalkPolicy" -> policy(allowStatement("elasticbeanstalk:*", appArn))
+        "BeanstalkPolicy" -> policy(beanstalkStatement)
       )
     )
     .build()
@@ -186,7 +191,8 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
               "DeployAction",
               buildOut,
               appName,
-              beanstalkEnv.getEnvironmentName
+              beanstalkEnv.getEnvironmentName,
+              beanstalkStatement
             )
           )
         )

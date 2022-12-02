@@ -15,7 +15,7 @@ object CDK:
   def main(args: Array[String]): Unit =
     val app = new AWSApp()
     val vpc = VPCStack(app, "refvpc", VPCStack.CIDRs.default)
-    val qa = AppEnv(app, "ref", Env.Qa, vpc.vpc)
+    val qa = AppEnv(app, "mini", Env.Qa, vpc.vpc)
     val assembly = app.synth()
 
 enum Env(val name: String):
