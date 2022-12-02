@@ -34,9 +34,6 @@ class BeanstalkDeployAction(conf: EBDeployActionData) extends IAction:
   override def bind(scope: Construct, stage: IStage, options: ActionBindOptions): ActionConfig =
     options.getBucket.grantRead(options.getRole)
     options.getRole.addToPrincipalPolicy(conf.policy)
-//    options.getRole.addManagedPolicy(
-//      ManagedPolicy.fromAwsManagedPolicyName("AdministratorAccess-AWSElasticBeanstalk")
-//    )
     ActionConfig
       .builder()
       .configuration(

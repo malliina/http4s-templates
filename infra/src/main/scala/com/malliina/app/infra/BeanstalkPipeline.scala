@@ -189,6 +189,7 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
               allowStatement(
                 "elasticbeanstalk:*",
                 appArn,
+                envArn,
                 s"arn:aws:elasticbeanstalk:$region:$account:applicationversion/$appName/*"
               )
             )
