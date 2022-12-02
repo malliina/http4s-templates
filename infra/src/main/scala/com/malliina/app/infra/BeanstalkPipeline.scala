@@ -146,18 +146,12 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
     .build()
   val sourceOut = new Artifact()
   val buildOut = new Artifact()
-  val beanstalkStatement = allowStatement("elasticbeanstalk:*", envArn)
   val pipelineRole = Role.Builder
     .create(stack, makeId("PipelineRole"))
     .assumedBy(principal("codepipeline.amazonaws.com"))
     .managedPolicies(
       list(
         ManagedPolicy.fromAwsManagedPolicyName("AWSCodePipeline_FullAccess")
-      )
-    )
-    .inlinePolicies(
-      map(
-        "BeanstalkPolicy" -> policy(beanstalkStatement)
       )
     )
     .build()
@@ -192,7 +186,11 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
               buildOut,
               appName,
               beanstalkEnv.getEnvironmentName,
-              beanstalkStatement
+              allowStatement(
+                "elasticbeanstalk:*",
+                appArn,
+                s"arn:aws:elasticbeanstalk:$region:$account:applicationversion/$appName/*"
+              )
             )
           )
         )
