@@ -186,20 +186,6 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
             .environmentName(beanstalkEnv.getEnvironmentName)
             .input(buildOut)
             .build()
-//          BeanstalkDeployAction(
-//            EBDeployActionData(
-//              "DeployAction",
-//              buildOut,
-//              appName,
-//              beanstalkEnv.getEnvironmentName,
-//              allowAction(
-//                "elasticbeanstalk:*",
-//                appArn,
-//                envArn,
-//                s"arn:aws:elasticbeanstalk:$region:$account:applicationversion/$appName/*"
-//              )
-//            )
-//          )
         )
       )
     )
