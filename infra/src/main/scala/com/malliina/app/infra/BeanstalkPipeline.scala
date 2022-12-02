@@ -3,7 +3,7 @@ package com.malliina.app.infra
 import software.amazon.awscdk.Stack
 import software.amazon.awscdk.services.codebuild.*
 import software.amazon.awscdk.services.codecommit.Repository
-import software.amazon.awscdk.services.codepipeline.actions.{CodeBuildAction, CodeCommitSourceAction}
+import software.amazon.awscdk.services.codepipeline.actions.{CodeBuildAction, CodeCommitSourceAction, ElasticBeanstalkDeployAction}
 import software.amazon.awscdk.services.codepipeline.{Artifact, IAction, Pipeline, StageProps}
 import software.amazon.awscdk.services.ec2.{IVpc, Vpc, VpcLookupOptions}
 import software.amazon.awscdk.services.elasticbeanstalk.{CfnApplication, CfnConfigurationTemplate, CfnEnvironment}
@@ -179,20 +179,27 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
             .build()
         ),
         stage("Deploy")(
-          BeanstalkDeployAction(
-            EBDeployActionData(
-              "DeployAction",
-              buildOut,
-              appName,
-              beanstalkEnv.getEnvironmentName,
-              allowAction(
-                "elasticbeanstalk:*",
-                appArn,
-                envArn,
-                s"arn:aws:elasticbeanstalk:$region:$account:applicationversion/$appName/*"
-              )
-            )
-          )
+          ElasticBeanstalkDeployAction.Builder
+            .create()
+            .actionName("DeployAction")
+            .applicationName(appName)
+            .environmentName(beanstalkEnv.getEnvironmentName)
+            .input(buildOut)
+            .build()
+//          BeanstalkDeployAction(
+//            EBDeployActionData(
+//              "DeployAction",
+//              buildOut,
+//              appName,
+//              beanstalkEnv.getEnvironmentName,
+//              allowAction(
+//                "elasticbeanstalk:*",
+//                appArn,
+//                envArn,
+//                s"arn:aws:elasticbeanstalk:$region:$account:applicationversion/$appName/*"
+//              )
+//            )
+//          )
         )
       )
     )
