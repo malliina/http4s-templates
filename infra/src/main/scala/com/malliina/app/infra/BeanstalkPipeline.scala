@@ -30,8 +30,6 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
     .description("Built with CDK in Helsinki")
     .build()
   val appName = app.getApplicationName
-  val appArn =
-    s"arn:aws:elasticbeanstalk:$region:$account:application/$appName"
   val solutionStack = "64bit Amazon Linux 2 v3.4.1 running Corretto 17"
 
   val branch = "master"
@@ -46,8 +44,6 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
   def buildComputeType = architecture match
     case Arch.Arm64 => ComputeType.SMALL
     case _          => ComputeType.MEDIUM
-
-  // Environment
 
   val serviceRole = Role.Builder
     .create(stack, "ServiceRole")
@@ -120,8 +116,6 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
     .environmentName(envName)
     .templateName(configurationTemplate.getRef)
     .build()
-  val envArn =
-    s"arn:aws:elasticbeanstalk:$region:$account:environment/${beanstalkEnv.getApplicationName}/${beanstalkEnv.getEnvironmentName}"
 
   // Pipeline
 
