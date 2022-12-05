@@ -28,7 +28,6 @@ Infra code for Azure is [here](https://github.com/malliina/bicep/blob/master/jav
 Setup infrastructure:
 
     cdk boostrap
-    cdk deploy refvpc
     cdk deploy qa-ref
     pip3 install git-remote-codecommit
     git remote add qa codecommit::eu-west-1://qa-ref-app

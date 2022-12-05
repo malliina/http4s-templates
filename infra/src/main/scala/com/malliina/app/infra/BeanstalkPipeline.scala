@@ -1,6 +1,6 @@
 package com.malliina.app.infra
 
-import software.amazon.awscdk.Stack
+import software.amazon.awscdk.{RemovalPolicy, Stack}
 import software.amazon.awscdk.services.codebuild.*
 import software.amazon.awscdk.services.codecommit.Repository
 import software.amazon.awscdk.services.codepipeline.actions.{CodeBuildAction, CodeCommitSourceAction, ElasticBeanstalkDeployAction}
@@ -8,6 +8,7 @@ import software.amazon.awscdk.services.codepipeline.{Artifact, IAction, Pipeline
 import software.amazon.awscdk.services.ec2.{IVpc, Vpc, VpcLookupOptions}
 import software.amazon.awscdk.services.elasticbeanstalk.{CfnApplication, CfnConfigurationTemplate, CfnEnvironment}
 import software.amazon.awscdk.services.iam.{CfnInstanceProfile, ManagedPolicy, PolicyDocument, Role}
+import software.amazon.awscdk.services.s3.{BlockPublicAccess, Bucket}
 
 import scala.jdk.CollectionConverters.ListHasAsScala
 
@@ -46,12 +47,10 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
     case Arch.Arm64 => ComputeType.SMALL
     case _          => ComputeType.MEDIUM
 
-  def makeId(name: String) = s"$envName-$name"
-
   // Environment
 
   val serviceRole = Role.Builder
-    .create(stack, makeId("ServiceRole"))
+    .create(stack, "ServiceRole")
     .assumedBy(principal("elasticbeanstalk.amazonaws.com"))
     .managedPolicies(
       list(
@@ -61,7 +60,7 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
     )
     .build()
   val appRole = Role.Builder
-    .create(stack, makeId("AppRole"))
+    .create(stack, "AppRole")
     .assumedBy(principal("ec2.amazonaws.com"))
     .managedPolicies(
       list(
@@ -70,12 +69,12 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
     )
     .build()
   val instanceProfile = CfnInstanceProfile.Builder
-    .create(stack, makeId("InstanceProfile"))
+    .create(stack, "InstanceProfile")
     .path("/")
     .roles(list(appRole.getRoleName))
     .build()
   val configurationTemplate = CfnConfigurationTemplate.Builder
-    .create(stack, makeId("BeanstalkConfigurationTemplate"))
+    .create(stack, "BeanstalkConfigurationTemplate")
     .applicationName(appName)
     .solutionStackName(solutionStack)
     .optionSettings(
@@ -116,7 +115,7 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
     )
     .build()
   val beanstalkEnv = CfnEnvironment.Builder
-    .create(stack, makeId("Env"))
+    .create(stack, "Env")
     .applicationName(appName)
     .environmentName(envName)
     .templateName(configurationTemplate.getRef)
@@ -134,19 +133,19 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
       .build()
   val codebuildProject =
     PipelineProject.Builder
-      .create(stack, makeId("Build"))
+      .create(stack, "Build")
       .buildSpec(BuildSpec.fromSourceFilename("buildspec-java.yml"))
       .environment(buildEnv)
       .build()
   val repo = Repository.Builder
-    .create(stack, makeId("Code"))
+    .create(stack, "Code")
     .repositoryName(envName)
     .description(s"Repository for $envName environment of app $appName.")
     .build()
   val sourceOut = new Artifact()
   val buildOut = new Artifact()
   val pipelineRole = Role.Builder
-    .create(stack, makeId("PipelineRole"))
+    .create(stack, "PipelineRole")
     .assumedBy(principal("codepipeline.amazonaws.com"))
     .managedPolicies(
       list(
@@ -155,9 +154,17 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
     )
     .build()
   repo.grantPullPush(pipelineRole)
+  val artifactsBucket = Bucket.Builder
+    .create(stack, "Artifacts")
+    .bucketName(s"$envName-artifacts")
+    .blockPublicAccess(BlockPublicAccess.BLOCK_ALL)
+    .removalPolicy(RemovalPolicy.DESTROY)
+    .autoDeleteObjects(true)
+    .build()
   val pipeline: Pipeline = Pipeline.Builder
-    .create(stack, makeId("Pipeline"))
+    .create(stack, "Pipeline")
     .role(pipelineRole)
+    .artifactBucket(artifactsBucket)
     .stages(
       list[StageProps](
         stage("Source")(
