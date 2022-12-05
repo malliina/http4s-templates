@@ -32,7 +32,7 @@ case class ServerProps(server: Server, client: HttpClient[IO]):
 trait ServerSuite:
   self: CatsEffectSuite =>
   val resource: Resource[IO, ServerProps] = for
-    s <- Service.emberServer[IO]
+    s <- Server.emberServer[IO]
     c <- HttpClientIO.resource[IO]
   yield ServerProps(s, c)
   val server = ResourceSuiteLocalFixture("server", resource)
