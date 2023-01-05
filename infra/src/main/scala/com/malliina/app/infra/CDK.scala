@@ -16,8 +16,13 @@ object CDK:
     val app = new AWSApp()
     val vpc = VPCStack(app, "refvpc", VPCStack.CIDRs.default).vpc
 //    val qa = AppEnv(app, "ref", Env.Qa, vpc, Seq("sg-0e1724683903cd691"))
-    val qa =
-      AppEnvLookupVpc(app, "ref", Env.Qa, "vpc-00cee1dac3e54ef13", Seq("sg-0e1724683903cd691"))
+    val qa = AppEnvLookupVpc(
+      app,
+      "ref",
+      Env.Qa,
+      vpcId = "vpc-00cee1dac3e54ef13",
+      securityGroupIds = Seq("sg-0e1724683903cd691") // group with access to database
+    )
     val assembly = app.synth()
 
 enum Env(val name: String):
@@ -40,9 +45,5 @@ class AppEnvLookupVpc(
     "vpc-lookup",
     VpcLookupOptions.builder().vpcId(vpcId).build()
   )
-  val db = DatabaseConf(
-    "jdbc:mysql://qa-ref-database-database-swskawm1nnsn.cluster-c9den26nqkne.eu-west-1.rds.amazonaws.com/ref",
-    "qa/ref"
-  )
   val pipeline =
-    BeanstalkPipeline(this, s"$env-$appName", vpcReference, securityGroupIds, Option(db))
+    BeanstalkPipeline(this, s"$env-$appName", vpcReference, securityGroupIds, database = None)

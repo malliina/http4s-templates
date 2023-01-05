@@ -30,7 +30,7 @@ class BeanstalkPipeline(
     .description("Built with CDK in Helsinki")
     .build()
   val appName = app.getApplicationName
-  val solutionStack = "64bit Amazon Linux 2 v3.4.1 running Corretto 17"
+  val solutionStack = "64bit Amazon Linux 2 v3.4.3 running Corretto 17"
 
   val branch = "master"
 
@@ -79,7 +79,9 @@ class BeanstalkPipeline(
   }.getOrElse {
     Nil
   }
-  val settings = databaseOptions ++ Seq(
+  val securityOptions =
+    if securityGroupIds.nonEmpty then Seq(ebSecurityGroupIds(securityGroupIds)) else Nil
+  val settings = securityOptions ++ databaseOptions ++ Seq(
     optionSetting(
       "aws:autoscaling:launchconfiguration",
       "IamInstanceProfile",
@@ -108,7 +110,6 @@ class BeanstalkPipeline(
     ebVpc("VPCId", vpc.getVpcId),
     ebSubnets(vpc.getPrivateSubnets.asScala.toList),
     ebElbSubnets(vpc.getPublicSubnets.asScala.toList),
-    ebSecurityGroupIds(securityGroupIds),
     ebInstanceType(t4g.small),
     ebDeployment("DeploymentPolicy", "AllAtOnce"),
     supportedArchitectures(Seq(architecture)),
