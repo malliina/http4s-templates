@@ -14,14 +14,10 @@ object CDK:
 
   def main(args: Array[String]): Unit =
     val app = new AWSApp()
-    val vpc = VPCStack(app, "refvpc", VPCStack.CIDRs.default)
-    val vpcReference =
-      Vpc.fromLookup(
-        app,
-        "vpc-lookup",
-        VpcLookupOptions.builder().vpcId("vpc-00cee1dac3e54ef13").build()
-      )
-    val qa = AppEnv(app, "ref", Env.Qa, vpcReference, Seq("sg-0e1724683903cd691"))
+    val vpc = VPCStack(app, "refvpc", VPCStack.CIDRs.default).vpc
+//    val qa = AppEnv(app, "ref", Env.Qa, vpc, Seq("sg-0e1724683903cd691"))
+    val qa =
+      AppEnvLookupVpc(app, "ref", Env.Qa, "vpc-00cee1dac3e54ef13", Seq("sg-0e1724683903cd691"))
     val assembly = app.synth()
 
 enum Env(val name: String):
@@ -31,3 +27,17 @@ enum Env(val name: String):
 class AppEnv(scope: Construct, appName: String, env: Env, vpc: IVpc, securityGroupIds: Seq[String])
   extends Stack(scope, s"$env-$appName", CDK.stackProps):
   val pipeline = BeanstalkPipeline(this, s"$env-$appName", vpc, securityGroupIds)
+
+class AppEnvLookupVpc(
+  scope: Construct,
+  appName: String,
+  env: Env,
+  vpcId: String,
+  securityGroupIds: Seq[String]
+) extends Stack(scope, s"$env-$appName", CDK.stackProps):
+  val vpcReference = Vpc.fromLookup(
+    this,
+    "vpc-lookup",
+    VpcLookupOptions.builder().vpcId(vpcId).build()
+  )
+  val pipeline = BeanstalkPipeline(this, s"$env-$appName", vpcReference, securityGroupIds)
