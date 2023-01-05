@@ -30,5 +30,5 @@ Setup infrastructure:
     cdk boostrap
     cdk deploy qa-ref
     pip3 install git-remote-codecommit
-    git remote add qa codecommit::eu-west-1://qa-ref-app
+    git remote add qa codecommit::eu-west-1://qa-ref
     git push qa
