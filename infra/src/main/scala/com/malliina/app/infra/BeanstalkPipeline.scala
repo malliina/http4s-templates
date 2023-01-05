@@ -12,15 +12,8 @@ import software.amazon.awscdk.services.s3.{BlockPublicAccess, Bucket}
 
 import scala.jdk.CollectionConverters.ListHasAsScala
 
-object BeanstalkPipeline:
-  case class Network(
-    vpcId: String,
-    privateSubnetIds: Seq[String],
-    publicSubnetIds: Seq[String],
-    elbSecurityGroupId: String
-  )
-
-class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuilders:
+class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc, securityGroupIds: Seq[String])
+  extends CDKBuilders:
   val region = stack.getRegion
   val account = stack.getAccount
   val envName = prefix
@@ -103,10 +96,12 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc) extends CDKBuil
         ebVpc("VPCId", vpc.getVpcId),
         ebSubnets(vpc.getPrivateSubnets.asScala.toList),
         ebElbSubnets(vpc.getPublicSubnets.asScala.toList),
+        ebSecurityGroupIds(securityGroupIds),
         ebInstanceType(t4g.small),
         ebDeployment("DeploymentPolicy", "AllAtOnce"),
         supportedArchitectures(Seq(architecture)),
-        streamLogs
+        streamLogs,
+        deleteLogsOnTerminate
       )
     )
     .build()
