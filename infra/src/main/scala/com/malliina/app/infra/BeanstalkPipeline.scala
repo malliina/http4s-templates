@@ -12,8 +12,15 @@ import software.amazon.awscdk.services.s3.{BlockPublicAccess, Bucket}
 
 import scala.jdk.CollectionConverters.ListHasAsScala
 
-class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc, securityGroupIds: Seq[String])
-  extends CDKBuilders:
+case class DatabaseConf(url: String, secretName: String)
+
+class BeanstalkPipeline(
+  stack: Stack,
+  prefix: String,
+  vpc: IVpc,
+  securityGroupIds: Seq[String],
+  database: Option[DatabaseConf]
+) extends CDKBuilders:
   val region = stack.getRegion
   val account = stack.getAccount
   val envName = prefix
@@ -62,48 +69,58 @@ class BeanstalkPipeline(stack: Stack, prefix: String, vpc: IVpc, securityGroupId
     .path("/")
     .roles(list(appRole.getRoleName))
     .build()
+  val databaseOptions = database.map { conf =>
+    Seq(
+      ebEnvVar("DB_ENABLED", "true"),
+      ebEnvVar("DB_URL", conf.url),
+      ebEnvVar("DB_USER", secretJson(conf.secretName, "username")),
+      ebEnvVar("DB_PASS", secretJson(conf.secretName, "password"))
+    )
+  }.getOrElse {
+    Nil
+  }
+  val settings = databaseOptions ++ Seq(
+    optionSetting(
+      "aws:autoscaling:launchconfiguration",
+      "IamInstanceProfile",
+      instanceProfile.getRef
+    ),
+    optionSetting("aws:elasticbeanstalk:environment", "ServiceRole", serviceRole.getRoleName),
+    ebEnvVar("PORT", "9000"),
+    //        ebEnvVar(
+    //          "APPLICATION_SECRET",
+    //          "{{resolve:secretsmanager:dev/refapp/secrets:SecretString:appsecret}}"
+    //        ),
+    asgMinSize(1),
+    asgMaxSize(2),
+    ebEnvironment("EnvironmentType", "LoadBalanced"),
+    ebEnvironment("LoadBalancerType", "application"),
+    //        optionSetting(
+    //          "aws:elasticbeanstalk:environment:process:default",
+    //          "HealthCheckPath",
+    //          "/health"
+    //        ),
+    optionSetting(
+      "aws:elasticbeanstalk:environment:process:default",
+      "StickinessEnabled",
+      "true"
+    ),
+    ebVpc("VPCId", vpc.getVpcId),
+    ebSubnets(vpc.getPrivateSubnets.asScala.toList),
+    ebElbSubnets(vpc.getPublicSubnets.asScala.toList),
+    ebSecurityGroupIds(securityGroupIds),
+    ebInstanceType(t4g.small),
+    ebDeployment("DeploymentPolicy", "AllAtOnce"),
+    supportedArchitectures(Seq(architecture)),
+    streamLogs,
+    deleteLogsOnTerminate
+  )
+
   val configurationTemplate = CfnConfigurationTemplate.Builder
     .create(stack, "BeanstalkConfigurationTemplate")
     .applicationName(appName)
     .solutionStackName(solutionStack)
-    .optionSettings(
-      list[AnyRef](
-        optionSetting(
-          "aws:autoscaling:launchconfiguration",
-          "IamInstanceProfile",
-          instanceProfile.getRef
-        ),
-        optionSetting("aws:elasticbeanstalk:environment", "ServiceRole", serviceRole.getRoleName),
-        ebEnvVar("PORT", "9000"),
-//        ebEnvVar(
-//          "APPLICATION_SECRET",
-//          "{{resolve:secretsmanager:dev/refapp/secrets:SecretString:appsecret}}"
-//        ),
-        asgMinSize(1),
-        asgMaxSize(2),
-        ebEnvironment("EnvironmentType", "LoadBalanced"),
-        ebEnvironment("LoadBalancerType", "application"),
-        //        optionSetting(
-        //          "aws:elasticbeanstalk:environment:process:default",
-        //          "HealthCheckPath",
-        //          "/health"
-        //        ),
-        optionSetting(
-          "aws:elasticbeanstalk:environment:process:default",
-          "StickinessEnabled",
-          "true"
-        ),
-        ebVpc("VPCId", vpc.getVpcId),
-        ebSubnets(vpc.getPrivateSubnets.asScala.toList),
-        ebElbSubnets(vpc.getPublicSubnets.asScala.toList),
-        ebSecurityGroupIds(securityGroupIds),
-        ebInstanceType(t4g.small),
-        ebDeployment("DeploymentPolicy", "AllAtOnce"),
-        supportedArchitectures(Seq(architecture)),
-        streamLogs,
-        deleteLogsOnTerminate
-      )
-    )
+    .optionSettings(list[AnyRef](settings*))
     .build()
   val beanstalkEnv = CfnEnvironment.Builder
     .create(stack, "Env")

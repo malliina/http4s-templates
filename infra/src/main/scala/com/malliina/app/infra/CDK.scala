@@ -26,7 +26,7 @@ enum Env(val name: String):
 
 class AppEnv(scope: Construct, appName: String, env: Env, vpc: IVpc, securityGroupIds: Seq[String])
   extends Stack(scope, s"$env-$appName", CDK.stackProps):
-  val pipeline = BeanstalkPipeline(this, s"$env-$appName", vpc, securityGroupIds)
+  val pipeline = BeanstalkPipeline(this, s"$env-$appName", vpc, securityGroupIds, None)
 
 class AppEnvLookupVpc(
   scope: Construct,
@@ -40,4 +40,9 @@ class AppEnvLookupVpc(
     "vpc-lookup",
     VpcLookupOptions.builder().vpcId(vpcId).build()
   )
-  val pipeline = BeanstalkPipeline(this, s"$env-$appName", vpcReference, securityGroupIds)
+  val db = DatabaseConf(
+    "jdbc:mysql://qa-ref-database-database-swskawm1nnsn.cluster-c9den26nqkne.eu-west-1.rds.amazonaws.com/ref",
+    "qa/ref"
+  )
+  val pipeline =
+    BeanstalkPipeline(this, s"$env-$appName", vpcReference, securityGroupIds, Option(db))

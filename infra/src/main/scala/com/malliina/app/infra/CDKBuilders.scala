@@ -34,3 +34,5 @@ trait CDKBuilders extends OptionSettings:
       .build()
   def stage(name: String)(actions: IAction*) =
     StageProps.builder().stageName(name).actions(list(actions*)).build()
+  def secretJson(secretName: String, jsonKey: String) =
+    s"{{resolve:secretsmanager:$secretName::$jsonKey}}"
