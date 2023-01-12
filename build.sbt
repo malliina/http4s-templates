@@ -18,15 +18,14 @@ val server = project
   .enablePlugins(RevolverPlugin, BuildInfoPlugin, JavaServerAppPackaging)
   .settings(
     libraryDependencies ++=
-      Seq("ember-server", "dsl", "circe").map { m => "org.http4s" %% s"http4s-$m" % "0.23.16" } ++
+      Seq("ember-server", "dsl", "circe").map { m => "org.http4s" %% s"http4s-$m" % "0.23.17" } ++
         Seq("core", "generic").map { m => "io.circe" %% s"circe-$m" % "0.14.3" } ++
-        Seq("classic", "core").map { m => "ch.qos.logback" % s"logback-$m" % "1.2.11" } ++
+        Seq("classic", "core").map { m => "ch.qos.logback" % s"logback-$m" % "1.4.5" } ++
         Seq("core", "hikari").map { m => "org.tpolecat" %% s"doobie-$m" % "1.0.0-RC2" } ++
         Seq(
           "com.typesafe" % "config" % "1.4.2",
-          "org.slf4j" % "slf4j-api" % "1.7.36",
           "com.lihaoyi" %% "scalatags" % "0.12.0",
-          "com.malliina" %% "okclient-io" % "3.3.0",
+          "com.malliina" %% "okclient-io" % "3.4.0",
           "mysql" % "mysql-connector-java" % "8.0.31",
           "org.flywaydb" % "flyway-core" % "7.15.0",
           "org.scalameta" %% "munit" % "0.7.29" % Test,
@@ -54,7 +53,7 @@ val infra = project
   .disablePlugins(RevolverPlugin)
   .settings(
     libraryDependencies ++= Seq(
-      "software.amazon.awscdk" % "aws-cdk-lib" % "2.53.0"
+      "software.amazon.awscdk" % "aws-cdk-lib" % "2.60.0"
     )
   )
 
